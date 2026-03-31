@@ -24,8 +24,8 @@ end
 
 -- Black Hawk Rescue Mission 5 Place IDs
 local PVE_PLACE_IDS = {
-    [3701546109] = true,
-    [2916899287] = true
+    [2916899287] = true,  -- Main game
+    [3701546109] = true   -- PVE mode
 }
 
 -- Obfuscated remote script loader
@@ -45,20 +45,20 @@ local function loadRemoteScript(url)
     end)
 end
 
-local function loadPve()
+local function loadMain()
     loadRemoteScript("https://raw.githubusercontent.com/d3mong/bhrm5-scripts/main/bhrm5/main.lua")
 end
 
 -- Auto-load if place ID matches
 if PVE_PLACE_IDS[placeId] then
     randomWait()
-    loadPve()
+    loadMain()
     return
 end
 
--- Manual mode selection (if PlaceId not matched)
+-- Manual mode selection
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = randomString(12)  -- Random name for anti-detection
+screenGui.Name = randomString(12)
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999
 screenGui.ResetOnSpawn = false
@@ -77,7 +77,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundTransparency = 1
-title.Text = "BHRM5  |  D3MONG"
+title.Text = "BHRM5 | SEKUMPUL"
 title.TextColor3 = Color3.fromRGB(85, 170, 255)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
@@ -87,7 +87,7 @@ local sub = Instance.new("TextLabel")
 sub.Size = UDim2.new(1, 0, 0, 20)
 sub.Position = UDim2.new(0, 0, 0, 42)
 sub.BackgroundTransparency = 1
-sub.Text = "Select a mode"
+sub.Text = "discord.gg/aJ4ZWEz387"
 sub.TextColor3 = Color3.fromRGB(180, 180, 180)
 sub.Font = Enum.Font.Gotham
 sub.TextSize = 13
@@ -107,11 +107,11 @@ local function createButton(name, text, color, posY)
     return btn
 end
 
-local pveButton = createButton("PVE", "PVE", Color3.fromRGB(60, 180, 60), 75)
+local loadButton = createButton("Load", "LOAD SCRIPT", Color3.fromRGB(60, 180, 60), 75)
 
-pveButton.MouseButton1Click:Connect(function()
-    pveButton.Text = "Loading..."
+loadButton.MouseButton1Click:Connect(function()
+    loadButton.Text = "Loading..."
     task.wait(0.2)
     screenGui:Destroy()
-    loadPve()
+    loadMain()
 end)
