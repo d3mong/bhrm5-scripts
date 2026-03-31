@@ -67,45 +67,56 @@ local function makeHighlight(model, isPlayer)
     hl.OutlineTransparency = 0
     hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
     hl.Parent = model
+    
     return hl
 end
 
 local function removeHL(model)
-    local hl = Walls._highlights[model]
-    if hl then pcall(function() hl:Destroy() end) end
-    Walls._highlights[model] = nil
+    if Walls._highlights[model] then
+        local data = Walls._highlights[model]
+        if data and data.highlight then
+            pcall(function() data.highlight:Destroy() end)
+        end
+        Walls._highlights[model] = nil
+    end
 end
 
 -- ---- Public API --------------------------------------------
 
 function Walls.enableNPCs(npcManager)
     Walls._npcEnabled = true
-    Walls._startUpdate(npcManager, nil)
+    Walls._npcManager = npcManager
+    Walls._startUpdate()
+    print("[D3MONG] NPC ESP Enabled")
 end
 
 function Walls.disableNPCs()
     Walls._npcEnabled = false
     for model, data in pairs(Walls._highlights) do
-        if not data.isPlayer then
+        if data and not data.isPlayer then
             removeHL(model)
         end
     end
     Walls._checkDisconnect()
+    print("[D3MONG] NPC ESP Disabled")
 end
 
 function Walls.enablePlayers(playerManager)
     Walls._playerEnabled = true
-    Walls._startUpdate(nil, playerManager)
+    Walls._playerManager = playerManager
+    Walls._startUpdate()
+    print("[D3MONG] Player ESP Enabled")
 end
 
 function Walls.disablePlayers()
     Walls._playerEnabled = false
     for model, data in pairs(Walls._highlights) do
-        if data.isPlayer then
+        if data and data.isPlayer then
             removeHL(model)
         end
     end
     Walls._checkDisconnect()
+    print("[D3MONG] Player ESP Disabled")
 end
 
 function Walls._checkDisconnect()
@@ -118,18 +129,15 @@ function Walls._checkDisconnect()
     end
 end
 
-function Walls._startUpdate(npcManager, playerManager)
+function Walls._startUpdate()
     if Walls._conn then return end
-    
-    Walls._npcManager = npcManager or Walls._npcManager
-    Walls._playerManager = playerManager or Walls._playerManager
     
     local timer = 0
     Walls._conn = RunService.RenderStepped:Connect(function(dt)
         -- Attach highlights to NPCs if enabled
         if Walls._npcEnabled and Walls._npcManager then
             for model in pairs(Walls._npcManager:getAll()) do
-                if not Walls._highlights[model] then
+                if model and model.Parent and not Walls._highlights[model] then
                     Walls._highlights[model] = {
                         highlight = makeHighlight(model, false),
                         isPlayer = false
@@ -141,7 +149,7 @@ function Walls._startUpdate(npcManager, playerManager)
         -- Attach highlights to Players if enabled
         if Walls._playerEnabled and Walls._playerManager then
             for model in pairs(Walls._playerManager:getAll()) do
-                if not Walls._highlights[model] then
+                if model and model.Parent and not Walls._highlights[model] then
                     Walls._highlights[model] = {
                         highlight = makeHighlight(model, true),
                         isPlayer = true
@@ -154,7 +162,9 @@ function Walls._startUpdate(npcManager, playerManager)
         for model, data in pairs(Walls._highlights) do
             if not model or not model.Parent then
                 removeHL(model)
-            elseif (data.isPlayer and not Walls._playerEnabled) or (not data.isPlayer and not Walls._npcEnabled) then
+            elseif data.isPlayer and not Walls._playerEnabled then
+                removeHL(model)
+            elseif not data.isPlayer and not Walls._npcEnabled then
                 removeHL(model)
             end
         end
@@ -164,7 +174,7 @@ function Walls._startUpdate(npcManager, playerManager)
         if timer >= 0.1 then
             timer = 0
             for model, data in pairs(Walls._highlights) do
-                if model and model.Parent and data.highlight then
+                if model and model.Parent and data and data.highlight then
                     local head = model:FindFirstChild("Head")
                     if head then
                         local visible = canSee(head)
@@ -184,15 +194,26 @@ function Walls._startUpdate(npcManager, playerManager)
     end)
 end
 
-function Walls.setNPCVisibleColor(c) Walls._npcVisibleColor = c end
-function Walls.setNPCHiddenColor(c) Walls._npcHiddenColor = c end
-function Walls.setPlayerVisibleColor(c) Walls._playerVisibleColor = c end
-function Walls.setPlayerHiddenColor(c) Walls._playerHiddenColor = c end
+function Walls.setNPCVisibleColor(c)
+    Walls._npcVisibleColor = c
+end
+
+function Walls.setNPCHiddenColor(c)
+    Walls._npcHiddenColor = c
+end
+
+function Walls.setPlayerVisibleColor(c)
+    Walls._playerVisibleColor = c
+end
+
+function Walls.setPlayerHiddenColor(c)
+    Walls._playerHiddenColor = c
+end
 
 function Walls.setFillTransparency(v)
     Walls._fillAlpha = v
     for _, data in pairs(Walls._highlights) do
-        if data.highlight then
+        if data and data.highlight then
             data.highlight.FillTransparency = v
         end
     end
