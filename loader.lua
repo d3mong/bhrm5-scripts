@@ -1,14 +1,47 @@
+-- ============================================================
+--  BHRM5 Enhanced Loader by D3MONG
+--  Anti-Detection + Obfuscation
+-- ============================================================
+
 local player = game.Players.LocalPlayer
 local placeId = game.PlaceId
 
--- Black Hawk Rescue Mission 5 PVE Place ID
+-- Anti-detection: Randomize script names and timing
+local function randomString(length)
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    local result = ""
+    for i = 1, length do
+        local rand = math.random(1, #chars)
+        result = result .. chars:sub(rand, rand)
+    end
+    return result
+end
+
+-- Anti-detection: Random delay
+local function randomWait()
+    task.wait(math.random(50, 150) / 1000)
+end
+
+-- Black Hawk Rescue Mission 5 Place IDs
 local PVE_PLACE_IDS = {
-    [3701546109] = true
+    [3701546109] = true,
+    [2916899287] = true
 }
 
+-- Obfuscated remote script loader
 local function loadRemoteScript(url)
     task.spawn(function()
-        loadstring(game:HttpGet(url .. "?v=" .. tostring(os.time())))()
+        randomWait()
+        local cache_bust = randomString(8) .. "_" .. tostring(os.time())
+        local success, result = pcall(function()
+            return game:HttpGet(url .. "?v=" .. cache_bust)
+        end)
+        if success and result then
+            local fn, err = loadstring(result)
+            if fn then
+                pcall(fn)
+            end
+        end
     end)
 end
 
@@ -16,14 +49,16 @@ local function loadPve()
     loadRemoteScript("https://raw.githubusercontent.com/d3mong/bhrm5-scripts/main/bhrm5/main.lua")
 end
 
+-- Auto-load if place ID matches
 if PVE_PLACE_IDS[placeId] then
+    randomWait()
     loadPve()
     return
 end
 
 -- Manual mode selection (if PlaceId not matched)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "D3MONG_ModeSelect"
+screenGui.Name = randomString(12)  -- Random name for anti-detection
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999
 screenGui.ResetOnSpawn = false
@@ -76,6 +111,7 @@ local pveButton = createButton("PVE", "PVE", Color3.fromRGB(60, 180, 60), 75)
 
 pveButton.MouseButton1Click:Connect(function()
     pveButton.Text = "Loading..."
+    task.wait(0.2)
     screenGui:Destroy()
     loadPve()
 end)
