@@ -1,16 +1,12 @@
 -- ============================================================
 --  BHRM5 Player Manager  |  D3MONG
---  Detects and tracks REAL PLAYERS only (not NPCs)
 -- ============================================================
 
 local PlayerManager = {}
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 PlayerManager._players = {}
 PlayerManager._connections = {}
-
--- ---- Helpers ------------------------------------------------
 
 local function getRootPart(model)
     return model:FindFirstChild("HumanoidRootPart")
@@ -38,13 +34,10 @@ local function isValidPlayerCharacter(model)
     local humanoid = model:FindFirstChildOfClass("Humanoid")
     local head = model:FindFirstChild("Head")
     if not humanoid or not head then return false end
-    
     if humanoid.Health <= 0 then return false end
     
     return true, player
 end
-
--- ---- Track / Untrack ----------------------------------------
 
 local function trackPlayer(model, player)
     if PlayerManager._players[model] then return end
@@ -73,8 +66,6 @@ local function trackPlayer(model, player)
     table.insert(PlayerManager._connections, diedConn)
     table.insert(PlayerManager._connections, removeConn)
 end
-
--- ---- Public API ---------------------------------------------
 
 function PlayerManager:scan()
     for _, player in ipairs(Players:GetPlayers()) do
