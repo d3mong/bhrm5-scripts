@@ -73,6 +73,8 @@ function Aimbot.enable(npcManager, playerManager)
     Aimbot._npcManager = npcManager
     Aimbot._playerManager = playerManager
     
+    print("[D3MONG] Aimbot Enabled - Hold RIGHT MOUSE to aim")
+    
     Aimbot._conn = RunService.RenderStepped:Connect(function()
         if not Aimbot._enabled then return end
         
@@ -98,6 +100,7 @@ function Aimbot.disable()
         Aimbot._conn:Disconnect()
         Aimbot._conn = nil
     end
+    print("[D3MONG] Aimbot Disabled")
 end
 
 function Aimbot.setTargetNPCs(value)
