@@ -1,6 +1,5 @@
 -- ============================================================
 --  BHRM5 No Recoil  |  D3MONG
---  Camera pitch correction every RenderStepped frame
 -- ============================================================
 
 local NoRecoil   = {}
@@ -36,8 +35,6 @@ function NoRecoil.enable()
 
         NoRecoil._lastCF = cam.CFrame
     end)
-    
-    print("[D3MONG] No Recoil Enabled")
 end
 
 function NoRecoil.disable()
@@ -47,7 +44,6 @@ function NoRecoil.disable()
         NoRecoil._conn = nil
     end
     NoRecoil._lastCF = nil
-    print("[D3MONG] No Recoil Disabled")
 end
 
 function NoRecoil.setStrength(v)
