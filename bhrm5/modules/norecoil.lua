@@ -1,7 +1,6 @@
 -- ============================================================
 --  BHRM5 No Recoil  |  D3MONG
 --  Camera pitch correction every RenderStepped frame
---  No weapon config patching needed — works on any gun
 -- ============================================================
 
 local NoRecoil   = {}
@@ -12,7 +11,7 @@ NoRecoil._strength = 1.0
 NoRecoil._conn     = nil
 NoRecoil._lastCF   = nil
 
-local THRESHOLD = 0.0018  -- min pitch kick to correct (radians)
+local THRESHOLD = 0.0018
 
 function NoRecoil.enable()
     if NoRecoil._enabled then return end
@@ -29,7 +28,6 @@ function NoRecoil.enable()
             local _, curP,  _ = curCF:ToEulerAnglesYXZ()
             local delta = curP - lastP
 
-            -- Recoil = camera kicked upward = negative pitch delta
             if delta < -THRESHOLD then
                 local fix = math.abs(delta) * NoRecoil._strength
                 cam.CFrame = curCF * CFrame.Angles(fix, 0, 0)
@@ -38,6 +36,8 @@ function NoRecoil.enable()
 
         NoRecoil._lastCF = cam.CFrame
     end)
+    
+    print("[D3MONG] No Recoil Enabled")
 end
 
 function NoRecoil.disable()
@@ -47,6 +47,7 @@ function NoRecoil.disable()
         NoRecoil._conn = nil
     end
     NoRecoil._lastCF = nil
+    print("[D3MONG] No Recoil Disabled")
 end
 
 function NoRecoil.setStrength(v)
