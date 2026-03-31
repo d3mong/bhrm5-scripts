@@ -1,39 +1,45 @@
 -- ============================================================
---  BHRM5 Wallhack / ESP  |  D3MONG
---  Uses Highlight (AlwaysOnTop) per NPC
---  Green = you can see them | Red = behind a wall
+--  BHRM5 Enhanced Wallhack / ESP  |  D3MONG
+--  Separates PLAYERS from NPCs with different colors
+--  Green = visible | Red = behind wall (NPCs)
+--  Blue = visible | Yellow = behind wall (Players)
 -- ============================================================
 
-local Walls       = {}
-local RunService  = game:GetService("RunService")
-local Players     = game:GetService("Players")
+local Walls = {}
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
-Walls._highlights    = {}
-Walls._enabled       = false
-Walls._conn          = nil
-Walls._visibleColor  = Color3.fromRGB(0, 255, 80)
-Walls._hiddenColor   = Color3.fromRGB(255, 40, 40)
-Walls._fillAlpha     = 0.45
+Walls._highlights = {}
+Walls._npcEnabled = false
+Walls._playerEnabled = false
+Walls._conn = nil
+
+-- Color settings
+Walls._npcVisibleColor = Color3.fromRGB(0, 255, 80)
+Walls._npcHiddenColor = Color3.fromRGB(255, 40, 40)
+Walls._playerVisibleColor = Color3.fromRGB(0, 150, 255)
+Walls._playerHiddenColor = Color3.fromRGB(255, 200, 0)
+Walls._fillAlpha = 0.45
 
 -- ---- Raycast Visibility Check ------------------------------
 
 local function canSee(head)
     local camera = workspace.CurrentCamera
     if not camera or not head then return false end
-
-    local lp   = Players.LocalPlayer
+    
+    local lp = Players.LocalPlayer
     local char = lp and lp.Character
-
+    
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Blacklist
     params.FilterDescendantsInstances = char
         and { char, head.Parent }
         or  { head.Parent }
-
+    
     local origin = camera.CFrame.Position
-    local dir    = head.Position - origin
+    local dir = head.Position - origin
     local result = workspace:Raycast(origin, dir, params)
-
+    
     if result == nil then return true end
     if result.Instance:IsDescendantOf(head.Parent) then return true end
     return false
@@ -41,63 +47,136 @@ end
 
 -- ---- Highlight Helpers -------------------------------------
 
-local function makeHighlight(npcModel)
-    local old = npcModel:FindFirstChild("D3MONG_ESP")
+local function makeHighlight(model, isPlayer)
+    local old = model:FindFirstChild("D3MONG_ESP")
     if old then old:Destroy() end
-
-    local hl                   = Instance.new("Highlight")
-    hl.Name                    = "D3MONG_ESP"
-    hl.Adornee                 = npcModel
-    hl.FillColor               = Walls._hiddenColor
-    hl.OutlineColor            = Color3.fromRGB(255, 255, 255)
-    hl.FillTransparency        = Walls._fillAlpha
-    hl.OutlineTransparency     = 0
-    hl.DepthMode               = Enum.HighlightDepthMode.AlwaysOnTop
-    hl.Parent                  = npcModel
+    
+    local hl = Instance.new("Highlight")
+    hl.Name = "D3MONG_ESP"
+    hl.Adornee = model
+    
+    if isPlayer then
+        hl.FillColor = Walls._playerHiddenColor
+        hl.OutlineColor = Color3.fromRGB(0, 150, 255)
+    else
+        hl.FillColor = Walls._npcHiddenColor
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+    end
+    
+    hl.FillTransparency = Walls._fillAlpha
+    hl.OutlineTransparency = 0
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Parent = model
     return hl
 end
 
-local function removeHL(npcModel)
-    local hl = Walls._highlights[npcModel]
+local function removeHL(model)
+    local hl = Walls._highlights[model]
     if hl then pcall(function() hl:Destroy() end) end
-    Walls._highlights[npcModel] = nil
+    Walls._highlights[model] = nil
 end
 
 -- ---- Public API --------------------------------------------
 
-function Walls.enable(npcManager)
-    if Walls._enabled then return end
-    Walls._enabled = true
+function Walls.enableNPCs(npcManager)
+    Walls._npcEnabled = true
+    Walls._startUpdate(npcManager, nil)
+end
 
+function Walls.disableNPCs()
+    Walls._npcEnabled = false
+    for model, data in pairs(Walls._highlights) do
+        if not data.isPlayer then
+            removeHL(model)
+        end
+    end
+    Walls._checkDisconnect()
+end
+
+function Walls.enablePlayers(playerManager)
+    Walls._playerEnabled = true
+    Walls._startUpdate(nil, playerManager)
+end
+
+function Walls.disablePlayers()
+    Walls._playerEnabled = false
+    for model, data in pairs(Walls._highlights) do
+        if data.isPlayer then
+            removeHL(model)
+        end
+    end
+    Walls._checkDisconnect()
+end
+
+function Walls._checkDisconnect()
+    if not Walls._npcEnabled and not Walls._playerEnabled then
+        if Walls._conn then
+            Walls._conn:Disconnect()
+            Walls._conn = nil
+        end
+        Walls._highlights = {}
+    end
+end
+
+function Walls._startUpdate(npcManager, playerManager)
+    if Walls._conn then return end
+    
+    Walls._npcManager = npcManager or Walls._npcManager
+    Walls._playerManager = playerManager or Walls._playerManager
+    
     local timer = 0
     Walls._conn = RunService.RenderStepped:Connect(function(dt)
-        if not Walls._enabled then return end
-
-        -- Attach highlights to any new NPCs
-        for model in pairs(npcManager:getAll()) do
-            if not Walls._highlights[model] then
-                Walls._highlights[model] = makeHighlight(model)
+        -- Attach highlights to NPCs if enabled
+        if Walls._npcEnabled and Walls._npcManager then
+            for model in pairs(Walls._npcManager:getAll()) do
+                if not Walls._highlights[model] then
+                    Walls._highlights[model] = {
+                        highlight = makeHighlight(model, false),
+                        isPlayer = false
+                    }
+                end
             end
         end
-
-        -- Remove highlights for dead/gone NPCs
-        for model in pairs(Walls._highlights) do
+        
+        -- Attach highlights to Players if enabled
+        if Walls._playerEnabled and Walls._playerManager then
+            for model in pairs(Walls._playerManager:getAll()) do
+                if not Walls._highlights[model] then
+                    Walls._highlights[model] = {
+                        highlight = makeHighlight(model, true),
+                        isPlayer = true
+                    }
+                end
+            end
+        end
+        
+        -- Remove highlights for dead/gone entities
+        for model, data in pairs(Walls._highlights) do
             if not model or not model.Parent then
+                removeHL(model)
+            elseif (data.isPlayer and not Walls._playerEnabled) or (not data.isPlayer and not Walls._npcEnabled) then
                 removeHL(model)
             end
         end
-
+        
         -- Update colors every 0.1s
         timer = timer + dt
         if timer >= 0.1 then
             timer = 0
-            for model, hl in pairs(Walls._highlights) do
-                if model and model.Parent then
+            for model, data in pairs(Walls._highlights) do
+                if model and model.Parent and data.highlight then
                     local head = model:FindFirstChild("Head")
                     if head then
-                        hl.FillColor = canSee(head)
-                            and Walls._visibleColor
-                            or  Walls._hiddenColor
+                        local visible = canSee(head)
+                        if data.isPlayer then
+                            data.highlight.FillColor = visible
+                                and Walls._playerVisibleColor
+                                or Walls._playerHiddenColor
+                        else
+                            data.highlight.FillColor = visible
+                                and Walls._npcVisibleColor
+                                or Walls._npcHiddenColor
+                        end
                     end
                 end
             end
@@ -105,19 +184,21 @@ function Walls.enable(npcManager)
     end)
 end
 
-function Walls.disable()
-    Walls._enabled = false
-    if Walls._conn then Walls._conn:Disconnect() Walls._conn = nil end
-    for model in pairs(Walls._highlights) do removeHL(model) end
-    Walls._highlights = {}
-end
+function Walls.setNPCVisibleColor(c) Walls._npcVisibleColor = c end
+function Walls.setNPCHiddenColor(c) Walls._npcHiddenColor = c end
+function Walls.setPlayerVisibleColor(c) Walls._playerVisibleColor = c end
+function Walls.setPlayerHiddenColor(c) Walls._playerHiddenColor = c end
 
-function Walls.setVisibleColor(c) Walls._visibleColor = c end
-function Walls.setHiddenColor(c)  Walls._hiddenColor  = c end
 function Walls.setFillTransparency(v)
     Walls._fillAlpha = v
-    for _, hl in pairs(Walls._highlights) do hl.FillTransparency = v end
+    for _, data in pairs(Walls._highlights) do
+        if data.highlight then
+            data.highlight.FillTransparency = v
+        end
+    end
 end
-function Walls.isEnabled() return Walls._enabled end
+
+function Walls.isNPCEnabled() return Walls._npcEnabled end
+function Walls.isPlayerEnabled() return Walls._playerEnabled end
 
 return Walls
