@@ -1,6 +1,5 @@
 -- ============================================================
 --  BHRM5 Aimbot  |  D3MONG
---  Simple aimbot for NPCs and Players
 -- ============================================================
 
 local Aimbot = {}
@@ -17,8 +16,6 @@ Aimbot._conn = nil
 Aimbot._npcManager = nil
 Aimbot._playerManager = nil
 
--- ---- Helpers ------------------------------------------------
-
 local function getClosestTarget()
     local camera = workspace.CurrentCamera
     local localPlayer = Players.LocalPlayer
@@ -28,7 +25,6 @@ local function getClosestTarget()
     local closestTarget = nil
     local shortestDistance = Aimbot._fov
     
-    -- Check NPCs if enabled
     if Aimbot._targetNPCs and Aimbot._npcManager then
         for model, data in pairs(Aimbot._npcManager:getAll()) do
             if model and model.Parent and data.head then
@@ -45,7 +41,6 @@ local function getClosestTarget()
         end
     end
     
-    -- Check Players if enabled
     if Aimbot._targetPlayers and Aimbot._playerManager then
         for model, data in pairs(Aimbot._playerManager:getAll()) do
             if model and model.Parent and data.head then
@@ -65,20 +60,15 @@ local function getClosestTarget()
     return closestTarget
 end
 
--- ---- Public API ---------------------------------------------
-
 function Aimbot.enable(npcManager, playerManager)
     if Aimbot._enabled then return end
     Aimbot._enabled = true
     Aimbot._npcManager = npcManager
     Aimbot._playerManager = playerManager
     
-    print("[D3MONG] Aimbot Enabled - Hold RIGHT MOUSE to aim")
-    
     Aimbot._conn = RunService.RenderStepped:Connect(function()
         if not Aimbot._enabled then return end
         
-        -- Only aim when right mouse button is held
         if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             return
         end
@@ -87,8 +77,6 @@ function Aimbot.enable(npcManager, playerManager)
         if target then
             local camera = workspace.CurrentCamera
             local targetCFrame = CFrame.new(camera.CFrame.Position, target.Position)
-            
-            -- Smooth aim
             camera.CFrame = camera.CFrame:Lerp(targetCFrame, Aimbot._smoothness)
         end
     end)
@@ -100,7 +88,6 @@ function Aimbot.disable()
         Aimbot._conn:Disconnect()
         Aimbot._conn = nil
     end
-    print("[D3MONG] Aimbot Disabled")
 end
 
 function Aimbot.setTargetNPCs(value)
