@@ -1,19 +1,16 @@
 -- ============================================================
---  BHRM5 Enhanced GUI Module  |  D3MONG
---  Community: SEKUMPUL (discord.gg/aJ4ZWEz387)
---  Focused: ESP, Aimbot, No Recoil
+--  BHRM5 Enhanced GUI  |  D3MONG
+--  Community: SEKUMPUL
 -- ============================================================
 
 local GUI = {}
 
 function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
 
-    -- Load Rayfield
     local Rayfield = loadstring(game:HttpGet(
         'https://raw.githubusercontent.com/UI-Interface/CustomFIeld/main/RayField.lua'
     ))()
 
-    -- ---- Window Configuration -----------------------------
     local Window = Rayfield:CreateWindow({
         Name = "BHRM5 Enhanced | D3MONG",
         LoadingTitle = "SEKUMPUL Community",
@@ -30,9 +27,9 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         },
         KeySystem = true,
         KeySettings = {
-            Title = "BHRM5 | D3MONG",
+            Title = "BHRM5 Enhanced",
             Subtitle = "Key System",
-            Note = "Key: demong | Discord: discord.gg/aJ4ZWEz387",
+            Note = "Join discord.gg/aJ4ZWEz387",
             FileName = "D3MONG_Key",
             SaveKey = true,
             GrabKeyFromSite = false,
@@ -41,14 +38,13 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
     })
 
     -- ========================================================
-    -- TAB 1: ESP & VISUALS
+    -- TAB 1: ESP
     -- ========================================================
-    local VisualTab = Window:CreateTab("ESP & Visuals", 4483362458)
+    local ESPTab = Window:CreateTab("ESP", 4483362458)
     
-    VisualTab:CreateSection("ESP Settings", false)
+    ESPTab:CreateSection("ESP Controls", false)
 
-    -- NPC ESP Toggle
-    VisualTab:CreateToggle({
+    ESPTab:CreateToggle({
         Name = "NPC ESP",
         CurrentValue = false,
         Flag = "NPCESPEnabled",
@@ -61,8 +57,7 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Player ESP Toggle
-    VisualTab:CreateToggle({
+    ESPTab:CreateToggle({
         Name = "Player ESP",
         CurrentValue = false,
         Flag = "PlayerESPEnabled",
@@ -75,8 +70,7 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- ESP Transparency Slider
-    VisualTab:CreateSlider({
+    ESPTab:CreateSlider({
         Name = "ESP Transparency",
         Range = {0, 100},
         Increment = 5,
@@ -88,12 +82,10 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- ESP Colors Section
-    VisualTab:CreateSection("ESP Colors", false)
+    ESPTab:CreateSection("NPC Colors", false)
 
-    -- NPC Visible Color
-    VisualTab:CreateColorPicker({
-        Name = "NPC Visible Color",
+    ESPTab:CreateColorPicker({
+        Name = "NPC Visible",
         Color = Color3.fromRGB(0, 255, 80),
         Flag = "NPCVisibleColor",
         Callback = function(Value)
@@ -101,9 +93,8 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end
     })
 
-    -- NPC Hidden Color
-    VisualTab:CreateColorPicker({
-        Name = "NPC Hidden Color",
+    ESPTab:CreateColorPicker({
+        Name = "NPC Hidden",
         Color = Color3.fromRGB(255, 40, 40),
         Flag = "NPCHiddenColor",
         Callback = function(Value)
@@ -111,9 +102,10 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end
     })
 
-    -- Player Visible Color
-    VisualTab:CreateColorPicker({
-        Name = "Player Visible Color",
+    ESPTab:CreateSection("Player Colors", false)
+
+    ESPTab:CreateColorPicker({
+        Name = "Player Visible",
         Color = Color3.fromRGB(0, 150, 255),
         Flag = "PlayerVisibleColor",
         Callback = function(Value)
@@ -121,9 +113,8 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end
     })
 
-    -- Player Hidden Color
-    VisualTab:CreateColorPicker({
-        Name = "Player Hidden Color",
+    ESPTab:CreateColorPicker({
+        Name = "Player Hidden",
         Color = Color3.fromRGB(255, 200, 0),
         Flag = "PlayerHiddenColor",
         Callback = function(Value)
@@ -132,14 +123,13 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
     })
 
     -- ========================================================
-    -- TAB 2: COMBAT
+    -- TAB 2: AIMBOT
     -- ========================================================
-    local CombatTab = Window:CreateTab("Combat", 4483362458)
+    local AimbotTab = Window:CreateTab("Aimbot", 4483362458)
     
-    CombatTab:CreateSection("Aimbot", false)
+    AimbotTab:CreateSection("Aimbot Settings", false)
 
-    -- Aimbot Toggle
-    CombatTab:CreateToggle({
+    AimbotTab:CreateToggle({
         Name = "Enable Aimbot",
         CurrentValue = false,
         Flag = "AimbotEnabled",
@@ -152,8 +142,7 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Target NPCs
-    CombatTab:CreateToggle({
+    AimbotTab:CreateToggle({
         Name = "Target NPCs",
         CurrentValue = true,
         Flag = "AimbotTargetNPCs",
@@ -162,8 +151,7 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Target Players
-    CombatTab:CreateToggle({
+    AimbotTab:CreateToggle({
         Name = "Target Players",
         CurrentValue = false,
         Flag = "AimbotTargetPlayers",
@@ -172,9 +160,8 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Aimbot FOV
-    CombatTab:CreateSlider({
-        Name = "Aimbot FOV",
+    AimbotTab:CreateSlider({
+        Name = "FOV",
         Range = {50, 500},
         Increment = 10,
         Suffix = "px",
@@ -185,9 +172,8 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Aimbot Smoothness
-    CombatTab:CreateSlider({
-        Name = "Aimbot Smoothness",
+    AimbotTab:CreateSlider({
+        Name = "Smoothness",
         Range = {1, 100},
         Increment = 1,
         Suffix = "%",
@@ -198,10 +184,13 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Recoil Section
-    CombatTab:CreateSection("Recoil Control", false)
+    -- ========================================================
+    -- TAB 3: COMBAT
+    -- ========================================================
+    local CombatTab = Window:CreateTab("Combat", 4483362458)
+    
+    CombatTab:CreateSection("No Recoil", false)
 
-    -- No Recoil Toggle
     CombatTab:CreateToggle({
         Name = "No Recoil",
         CurrentValue = false,
@@ -215,7 +204,6 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end,
     })
 
-    -- Recoil Strength
     CombatTab:CreateSlider({
         Name = "Recoil Reduction",
         Range = {0, 100},
@@ -229,53 +217,38 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
     })
 
     -- ========================================================
-    -- TAB 3: SETTINGS & INFO
+    -- TAB 4: INFO
     -- ========================================================
-    local SettingsTab = Window:CreateTab("Settings", 4483362458)
+    local InfoTab = Window:CreateTab("Info", 4483362458)
     
-    SettingsTab:CreateSection("Information", true)
+    InfoTab:CreateSection("Statistics", false)
 
-    SettingsTab:CreateLabel("BHRM5 Enhanced Script v2.0")
-    SettingsTab:CreateLabel("Created by D3MONG")
-    SettingsTab:CreateLabel("Community: SEKUMPUL")
-    
-    SettingsTab:CreateParagraph({
-        Title = "How to Use",
-        Content = "Toggle ESP to see NPCs/Players through walls. Enable Aimbot and hold RIGHT MOUSE BUTTON to aim. Use No Recoil for better accuracy. All settings are saved automatically."
-    })
+    local NPCLabel = InfoTab:CreateLabel("NPCs: 0")
+    local PlayerLabel = InfoTab:CreateLabel("Players: 0")
 
-    SettingsTab:CreateParagraph({
-        Title = "Controls",
-        Content = "INSERT Key = Toggle UI Visibility | Right Mouse Button = Aimbot (when enabled)"
-    })
-
-    SettingsTab:CreateParagraph({
-        Title = "Discord Community",
-        Content = "Join SEKUMPUL: discord.gg/aJ4ZWEz387 for support, updates, and more scripts!"
-    })
-
-    -- Live Stats
-    SettingsTab:CreateSection("Live Statistics", false)
-
-    local NPCLabel = SettingsTab:CreateLabel("NPCs: 0")
-    local PlayerLabel = SettingsTab:CreateLabel("Players: 0")
-
-    -- Update stats every second
     task.spawn(function()
         while task.wait(1) do
             pcall(function()
-                local npcCount = NPCManager:getCount()
-                local playerCount = PlayerManager:getCount()
-                NPCLabel:Set("NPCs Detected: " .. tostring(npcCount))
-                PlayerLabel:Set("Players Detected: " .. tostring(playerCount))
+                NPCLabel:Set("NPCs: " .. tostring(NPCManager:getCount()))
+                PlayerLabel:Set("Players: " .. tostring(PlayerManager:getCount()))
             end)
         end
     end)
 
-    -- Actions Section
-    SettingsTab:CreateSection("Actions", false)
+    InfoTab:CreateSection("Information", false)
 
-    SettingsTab:CreateButton({
+    InfoTab:CreateLabel("Version: 2.0")
+    InfoTab:CreateLabel("Author: D3MONG")
+    InfoTab:CreateLabel("Community: SEKUMPUL")
+
+    InfoTab:CreateSection("Controls", false)
+
+    InfoTab:CreateLabel("INSERT = Toggle UI")
+    InfoTab:CreateLabel("Right Mouse = Aimbot")
+
+    InfoTab:CreateSection("Actions", false)
+
+    InfoTab:CreateButton({
         Name = "Unload Script",
         Callback = function()
             Walls.disableNPCs()
@@ -285,20 +258,11 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
             NPCManager:cleanup()
             PlayerManager:cleanup()
             Rayfield:Destroy()
-            print("[D3MONG] Script unloaded successfully!")
-        end,
-    })
-
-    SettingsTab:CreateButton({
-        Name = "Reload Configuration",
-        Callback = function()
-            Rayfield:LoadConfiguration()
-            print("[D3MONG] Configuration reloaded!")
         end,
     })
 
     -- ========================================================
-    -- UI TOGGLE (INSERT KEY)
+    -- UI TOGGLE
     -- ========================================================
     local UIS = game:GetService("UserInputService")
     
@@ -309,10 +273,7 @@ function GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
         end
     end)
 
-    -- Load saved configuration
     Rayfield:LoadConfiguration()
-    
-    print("[D3MONG] GUI Loaded | SEKUMPUL Community")
 end
 
 return GUI
