@@ -1,8 +1,5 @@
 -- ============================================================
 --  BHRM5 Enhanced Wallhack / ESP  |  D3MONG
---  Separates PLAYERS from NPCs with different colors
---  Green = visible | Red = behind wall (NPCs)
---  Blue = visible | Yellow = behind wall (Players)
 -- ============================================================
 
 local Walls = {}
@@ -14,14 +11,11 @@ Walls._npcEnabled = false
 Walls._playerEnabled = false
 Walls._conn = nil
 
--- Color settings
 Walls._npcVisibleColor = Color3.fromRGB(0, 255, 80)
 Walls._npcHiddenColor = Color3.fromRGB(255, 40, 40)
 Walls._playerVisibleColor = Color3.fromRGB(0, 150, 255)
 Walls._playerHiddenColor = Color3.fromRGB(255, 200, 0)
 Walls._fillAlpha = 0.45
-
--- ---- Raycast Visibility Check ------------------------------
 
 local function canSee(head)
     local camera = workspace.CurrentCamera
@@ -44,8 +38,6 @@ local function canSee(head)
     if result.Instance:IsDescendantOf(head.Parent) then return true end
     return false
 end
-
--- ---- Highlight Helpers -------------------------------------
 
 local function makeHighlight(model, isPlayer)
     local old = model:FindFirstChild("D3MONG_ESP")
@@ -81,13 +73,10 @@ local function removeHL(model)
     end
 end
 
--- ---- Public API --------------------------------------------
-
 function Walls.enableNPCs(npcManager)
     Walls._npcEnabled = true
     Walls._npcManager = npcManager
     Walls._startUpdate()
-    print("[D3MONG] NPC ESP Enabled")
 end
 
 function Walls.disableNPCs()
@@ -98,14 +87,12 @@ function Walls.disableNPCs()
         end
     end
     Walls._checkDisconnect()
-    print("[D3MONG] NPC ESP Disabled")
 end
 
 function Walls.enablePlayers(playerManager)
     Walls._playerEnabled = true
     Walls._playerManager = playerManager
     Walls._startUpdate()
-    print("[D3MONG] Player ESP Enabled")
 end
 
 function Walls.disablePlayers()
@@ -116,7 +103,6 @@ function Walls.disablePlayers()
         end
     end
     Walls._checkDisconnect()
-    print("[D3MONG] Player ESP Disabled")
 end
 
 function Walls._checkDisconnect()
@@ -134,7 +120,6 @@ function Walls._startUpdate()
     
     local timer = 0
     Walls._conn = RunService.RenderStepped:Connect(function(dt)
-        -- Attach highlights to NPCs if enabled
         if Walls._npcEnabled and Walls._npcManager then
             for model in pairs(Walls._npcManager:getAll()) do
                 if model and model.Parent and not Walls._highlights[model] then
@@ -146,7 +131,6 @@ function Walls._startUpdate()
             end
         end
         
-        -- Attach highlights to Players if enabled
         if Walls._playerEnabled and Walls._playerManager then
             for model in pairs(Walls._playerManager:getAll()) do
                 if model and model.Parent and not Walls._highlights[model] then
@@ -158,7 +142,6 @@ function Walls._startUpdate()
             end
         end
         
-        -- Remove highlights for dead/gone entities
         for model, data in pairs(Walls._highlights) do
             if not model or not model.Parent then
                 removeHL(model)
@@ -169,7 +152,6 @@ function Walls._startUpdate()
             end
         end
         
-        -- Update colors every 0.1s
         timer = timer + dt
         if timer >= 0.1 then
             timer = 0
@@ -194,21 +176,10 @@ function Walls._startUpdate()
     end)
 end
 
-function Walls.setNPCVisibleColor(c)
-    Walls._npcVisibleColor = c
-end
-
-function Walls.setNPCHiddenColor(c)
-    Walls._npcHiddenColor = c
-end
-
-function Walls.setPlayerVisibleColor(c)
-    Walls._playerVisibleColor = c
-end
-
-function Walls.setPlayerHiddenColor(c)
-    Walls._playerHiddenColor = c
-end
+function Walls.setNPCVisibleColor(c) Walls._npcVisibleColor = c end
+function Walls.setNPCHiddenColor(c) Walls._npcHiddenColor = c end
+function Walls.setPlayerVisibleColor(c) Walls._playerVisibleColor = c end
+function Walls.setPlayerHiddenColor(c) Walls._playerHiddenColor = c end
 
 function Walls.setFillTransparency(v)
     Walls._fillAlpha = v
