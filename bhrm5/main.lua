@@ -1,11 +1,12 @@
 -- ============================================================
---  BHRM5 v1.0 by D3MONG
+--  BHRM5 Enhanced v2.0 by D3MONG
+--  With Player/NPC Separation + Aimbot + New UI
 -- ============================================================
 
 if typeof(clear) == "function" then clear() end
 
 local GITHUB_BASE = "https://raw.githubusercontent.com/d3mong/bhrm5-scripts/main/bhrm5/modules/"
-local BUST        = tostring(os.time())
+local BUST = tostring(os.time())
 
 local function loadModule(name)
     local url = GITHUB_BASE .. name .. ".lua?v=" .. BUST
@@ -27,19 +28,22 @@ local function loadModule(name)
     return result
 end
 
--- Load only what we have
+-- Load all modules
 local NPCManager = loadModule("npc_manager")
-local Walls      = loadModule("walls")
-local NoRecoil   = loadModule("norecoil")
-local GUI        = loadModule("gui")
+local PlayerManager = loadModule("player_manager")
+local Walls = loadModule("walls")
+local NoRecoil = loadModule("norecoil")
+local Aimbot = loadModule("aimbot")
+local GUI = loadModule("gui")
 
-if not NPCManager or not Walls or not NoRecoil or not GUI then
+if not NPCManager or not PlayerManager or not Walls or not NoRecoil or not Aimbot or not GUI then
     warn("[D3MONG] One or more modules failed. Check your GitHub repo files.")
     return
 end
 
--- Start NPC scanning immediately
+-- Start scanning
 NPCManager:scan()
+PlayerManager:scan()
 
--- Hand everything to GUI
-GUI:init(NPCManager, Walls, NoRecoil)
+-- Initialize GUI with all managers
+GUI:init(NPCManager, PlayerManager, Walls, NoRecoil, Aimbot)
