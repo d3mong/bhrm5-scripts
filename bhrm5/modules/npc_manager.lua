@@ -8,7 +8,7 @@ local NPCManager  = {}
 local Players     = game:GetService("Players")
 local RunService  = game:GetService("RunService")
 
-NPCManager._npcs        = {}   -- [model] = { model, head, root, humanoid }
+NPCManager._npcs        = {}
 NPCManager._connections = {}
 
 -- ---- Helpers ------------------------------------------------
@@ -37,7 +37,6 @@ local function isValidNPC(model)
     local head     = model:FindFirstChild("Head")
     if not humanoid or not head then return false end
 
-    -- Must be alive
     if humanoid.Health <= 0 then return false end
 
     return true
@@ -60,7 +59,6 @@ local function trackModel(model)
         humanoid = humanoid,
     }
 
-    -- Remove when NPC dies or is destroyed
     local diedConn = humanoid.Died:Connect(function()
         NPCManager._npcs[model] = nil
     end)
@@ -77,29 +75,24 @@ end
 -- ---- Public API ---------------------------------------------
 
 function NPCManager:scan()
-    -- Scan all current descendants in workspace
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Model") then
             trackModel(obj)
         end
     end
 
-    -- Watch for anything added to workspace
     local conn = workspace.DescendantAdded:Connect(function(obj)
         if obj:IsA("Model") then
-            task.wait(0.5) -- wait for children to load
+            task.wait(0.5)
             trackModel(obj)
         end
     end)
     table.insert(self._connections, conn)
 
-    -- Periodic rescan every 3s to catch any missed NPCs
     local rescanConn = RunService.Heartbeat:Connect(function()
-        -- lightweight: only scan top-level workspace children
         for _, obj in ipairs(workspace:GetChildren()) do
             if obj:IsA("Model") and not self._npcs[obj] then
                 trackModel(obj)
-                -- also check children
                 for _, child in ipairs(obj:GetChildren()) do
                     if child:IsA("Model") then
                         trackModel(child)
@@ -112,7 +105,6 @@ function NPCManager:scan()
 end
 
 function NPCManager:getAll()
-    -- Clean dead entries
     for model in pairs(self._npcs) do
         if not model or not model.Parent then
             self._npcs[model] = nil
