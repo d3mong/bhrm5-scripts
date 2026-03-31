@@ -1,136 +1,122 @@
 -- ============================================================
---  BHRM5 No-Recoil Module
---  Author  : D3MONG
---  Method  : RenderStepped camera pitch correction
---            (no weapon ModuleScript patching needed)
+--  BHRM5 No Recoil Module
+--  Author : D3MONG
+--  Two methods:
+--   1. Camera pitch correction  (works always)
+--   2. Weapon config zero-out   (deeper patch)
 -- ============================================================
 
-local Weapons     = {}
-local RunService  = game:GetService("RunService")
+local NoRecoil   = {}
+local RunService = game:GetService("RunService")
 
--- Internal state
-local _conn       = nil
-local _lastCF     = nil
-local _strength   = 1.0     -- 1.0 = full cancel, 0.5 = half cancel
-local _smoothing  = 0.85    -- lerp factor (0-1), higher = snappier correction
-local _enabled    = false
+NoRecoil._enabled    = false
+NoRecoil._strength   = 1.0   -- 1.0 = full cancel
+NoRecoil._conn       = nil
+NoRecoil._lastCF     = nil
 
--- Threshold: minimum pitch kick (radians) before we correct.
--- Too low = corrects normal mouse movement. Too high = misses soft recoil.
-local RECOIL_THRESHOLD = 0.0018
+-- Minimum pitch delta to treat as recoil kick (radians)
+-- Prevents normal mouse movement from being cancelled
+local THRESHOLD = 0.0020
 
--- ---- Core ---------------------------------------------------
+-- ---- Method 1: Camera Correction ----------------------------
 
-local function startLoop()
+local function startCameraCorrection()
     local camera = workspace.CurrentCamera
-    _lastCF = nil
+    NoRecoil._lastCF = nil
 
-    _conn = RunService.RenderStepped:Connect(function()
-        if not _enabled then return end
+    NoRecoil._conn = RunService.RenderStepped:Connect(function()
+        if not NoRecoil._enabled then return end
 
         local curCF = camera.CFrame
 
-        if _lastCF then
-            -- Extract pitch angles
-            local _, lastPitch, _ = _lastCF:ToEulerAnglesYXZ()
+        if NoRecoil._lastCF then
+            local _, lastPitch, _ = NoRecoil._lastCF:ToEulerAnglesYXZ()
             local _, curPitch,  _ = curCF:ToEulerAnglesYXZ()
 
             local delta = curPitch - lastPitch
 
-            -- Recoil pushes camera UP = negative pitch delta
-            if delta < -RECOIL_THRESHOLD then
-                local correction = math.abs(delta) * _strength
-
-                -- Smooth the correction with lerp to avoid jarring snaps
-                local smoothedCorrection = correction * _smoothing
-
-                camera.CFrame = curCF * CFrame.Angles(smoothedCorrection, 0, 0)
+            -- Upward recoil = negative pitch delta
+            if delta < -THRESHOLD then
+                local fix = math.abs(delta) * NoRecoil._strength
+                camera.CFrame = curCF * CFrame.Angles(fix, 0, 0)
             end
         end
 
-        _lastCF = camera.CFrame
+        NoRecoil._lastCF = camera.CFrame
     end)
 end
 
-local function stopLoop()
-    if _conn then
-        _conn:Disconnect()
-        _conn = nil
+local function stopCameraCorrection()
+    if NoRecoil._conn then
+        NoRecoil._conn:Disconnect()
+        NoRecoil._conn = nil
     end
-    _lastCF = nil
+    NoRecoil._lastCF = nil
 end
 
--- ---- Weapon patch (optional secondary method) ---------------
--- Tries to zero out recoil values inside weapon configs.
--- Safe: wrapped in pcall, does not error if structure differs.
+-- ---- Method 2: Weapon Config Patch --------------------------
+-- Zeroes out recoil values inside BHRM5 weapon configs
+-- Path: ReplicatedStorage > Shared > Configs > Weapon > Weapons_Player
 
-local function tryPatchWeaponConfigs(replicatedStorage, options)
-    if not options or not options.recoil then return end
-
-    local ok, weaponsFolder = pcall(function()
-        return replicatedStorage
-            .Shared
-            .Configs
-            .Weapon
-            .Weapons_Player
+local function patchWeaponConfigs()
+    local ok, folder = pcall(function()
+        return game:GetService("ReplicatedStorage")
+            .Shared.Configs.Weapon.Weapons_Player
     end)
-    if not ok or not weaponsFolder then return end
+    if not ok or not folder then
+        warn("[D3MONG] Weapon folder not found - camera correction only")
+        return
+    end
 
-    for _, platform in ipairs(weaponsFolder:GetChildren()) do
-        if platform.Name:match("^Platform_") then
-            for _, weapon in ipairs(platform:GetChildren()) do
-                for _, child in ipairs(weapon:GetChildren()) do
-                    if child:IsA("ModuleScript")
-                    and child.Name:match("^Receiver%.") then
-                        pcall(function()
-                            local recv = require(child)
-                            if recv and recv.Config and recv.Config.Tune then
-                                local t = recv.Config.Tune
-                                t.Recoil_X            = 0
-                                t.Recoil_Z            = 0
-                                t.RecoilForce_Tap     = 0
-                                t.RecoilForce_Impulse = 0
-                                t.Recoil_Range        = Vector2.zero
-                                t.Recoil_Camera       = 0
-                            end
-                        end)
-                    end
+    local patched = 0
+    for _, platform in ipairs(folder:GetChildren()) do
+        for _, weapon in ipairs(platform:GetChildren()) do
+            for _, child in ipairs(weapon:GetChildren()) do
+                if child:IsA("ModuleScript")
+                and child.Name:match("^Receiver%.") then
+                    pcall(function()
+                        local r = require(child)
+                        if r and r.Config and r.Config.Tune then
+                            local t = r.Config.Tune
+                            t.Recoil_X            = 0
+                            t.Recoil_Z            = 0
+                            t.RecoilForce_Tap     = 0
+                            t.RecoilForce_Impulse = 0
+                            t.Recoil_Range        = Vector2.zero
+                            t.Recoil_Camera       = 0
+                            patched = patched + 1
+                        end
+                    end)
                 end
             end
         end
+    end
+
+    if patched > 0 then
+        print("[D3MONG] Patched " .. patched .. " weapon(s)")
     end
 end
 
 -- ---- Public API ---------------------------------------------
 
--- Called by main.lua as: Weapons.patchWeapons(ReplicatedStorage, patchOptions)
-function Weapons.patchWeapons(replicatedStorage, patchOptions)
-    -- Always run camera correction if recoil patch is on
-    if patchOptions and patchOptions.recoil then
-        if not _enabled then
-            _enabled = true
-            startLoop()
-        end
-        -- Also try the config patch as a bonus
-        tryPatchWeaponConfigs(replicatedStorage, patchOptions)
-    else
-        if _enabled then
-            _enabled = false
-            stopLoop()
-        end
-    end
+function NoRecoil.enable()
+    if NoRecoil._enabled then return end
+    NoRecoil._enabled = true
+    startCameraCorrection()  -- always runs
+    patchWeaponConfigs()     -- tries deep patch too
 end
 
-function Weapons.setStrength(value)
-    _strength = math.clamp(value, 0.1, 3.0)
+function NoRecoil.disable()
+    NoRecoil._enabled = false
+    stopCameraCorrection()
 end
 
-function Weapons.setSmoothing(value)
-    _smoothing = math.clamp(value, 0.1, 1.0)
+function NoRecoil.setStrength(value)
+    NoRecoil._strength = math.clamp(value, 0.1, 3.0)
 end
 
-function Weapons.isEnabled()
-    return _enabled
+function NoRecoil.isEnabled()
+    return NoRecoil._enabled
 end
 
-return Weapons
+return NoRecoil
