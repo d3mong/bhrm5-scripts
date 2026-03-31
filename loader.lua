@@ -25,8 +25,8 @@ end
 
 -- Black Hawk Rescue Mission 5 Place IDs
 local PVE_PLACE_IDS = {
-    [2916899287] = true,  -- Main game
-    [3701546109] = true   -- PVE mode
+    [2916899287] = true,
+    [3701546109] = true
 }
 
 -- Obfuscated remote script loader
