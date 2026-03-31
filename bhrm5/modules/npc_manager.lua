@@ -1,7 +1,5 @@
 -- ============================================================
 --  BHRM5 NPC Manager  |  D3MONG
---  Detection: Any workspace model with Humanoid (not a player)
---  Works regardless of NPC container naming in BRM5
 -- ============================================================
 
 local NPCManager  = {}
@@ -10,8 +8,6 @@ local RunService  = game:GetService("RunService")
 
 NPCManager._npcs        = {}
 NPCManager._connections = {}
-
--- ---- Helpers ------------------------------------------------
 
 local function isPlayerCharacter(model)
     for _, player in ipairs(Players:GetPlayers()) do
@@ -36,13 +32,10 @@ local function isValidNPC(model)
     local humanoid = model:FindFirstChildOfClass("Humanoid")
     local head     = model:FindFirstChild("Head")
     if not humanoid or not head then return false end
-
     if humanoid.Health <= 0 then return false end
 
     return true
 end
-
--- ---- Track / Untrack ----------------------------------------
 
 local function trackModel(model)
     if NPCManager._npcs[model] then return end
@@ -71,8 +64,6 @@ local function trackModel(model)
     table.insert(NPCManager._connections, diedConn)
     table.insert(NPCManager._connections, removeConn)
 end
-
--- ---- Public API ---------------------------------------------
 
 function NPCManager:scan()
     for _, obj in ipairs(workspace:GetDescendants()) do
