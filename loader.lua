@@ -1,6 +1,7 @@
 -- ============================================================
 --  BHRM5 Enhanced Loader by D3MONG
 --  Anti-Detection + Obfuscation
+--  Community: SEKUMPUL
 -- ============================================================
 
 local player = game.Players.LocalPlayer
@@ -77,7 +78,7 @@ Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundTransparency = 1
-title.Text = "BHRM5 | SEKUMPUL"
+title.Text = "BHRM5 | D3MONG"
 title.TextColor3 = Color3.fromRGB(85, 170, 255)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
@@ -87,7 +88,7 @@ local sub = Instance.new("TextLabel")
 sub.Size = UDim2.new(1, 0, 0, 20)
 sub.Position = UDim2.new(0, 0, 0, 42)
 sub.BackgroundTransparency = 1
-sub.Text = "discord.gg/aJ4ZWEz387"
+sub.Text = "SEKUMPUL Community"
 sub.TextColor3 = Color3.fromRGB(180, 180, 180)
 sub.Font = Enum.Font.Gotham
 sub.TextSize = 13
